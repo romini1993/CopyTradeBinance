@@ -200,26 +200,27 @@
             else input.value = val;
         }
 
-        // Fungsi pembersih format tanggal ISO dari Google Sheet jadi dd/mm/yyyy bersih
+        // Anti-geser timezone: Parsing string tanggal ISO mentah ke tanggal lokal dengan akurat
         function cleanDateStr(dateInput) {
             if (!dateInput) return '';
             let str = String(dateInput).trim();
             if (str.includes('T')) {
-                str = str.split('T')[0]; // Ambil YYYY-MM-DD-nya saja
+                // Ambil bagian tanggalnya saja tanpa konversi UTC otomatis yang bikin mundur
+                str = str.split('T')[0];
             }
             if (str.includes('-') && str.split('-')[0].length === 4) {
-                const parts = str.split('-');
-                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                const parts = str.split('-'); // YYYY-MM-DD
+                return `${parts[2]}/${parts[1]}/${parts[0]}`; // dd/mm/yyyy
             }
             return str;
         }
 
-        // Fungsi pembuat format Hari, dd-mm-yyyy untuk Rekap Harian
         function formatDayAndDate(dateInput) {
             const cleaned = cleanDateStr(dateInput);
             if (!cleaned || !cleaned.includes('/')) return dateInput;
             const parts = cleaned.split('/');
-            const d = new Date(parts[2], parts[1] - 1, parts[0]);
+            // Pakai waktu lokal jam 12 siang biar aman dari selisih geser timezone
+            const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]), 12, 0, 0);
             if (isNaN(d.getTime())) return cleaned;
             const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
             const dayName = days[d.getDay()];
@@ -240,7 +241,6 @@
             }
             fetch(API_URL).then(res => res.json()).then(data => {
                 if (data && data.history) {
-                    // Normalisasi tanggal history agar bersih dari format ISO
                     data.history.forEach(item => { item.closed = cleanDateStr(item.closed); });
                     cachedGlobalResponse = data;
                     localStorage.setItem('tradingDataCache', JSON.stringify(data));
@@ -260,7 +260,6 @@
             const opened = document.getElementById('opened').value;
             const closedRaw = document.getElementById('closed').value;
             
-            // Format tanggal closed ke dd/mm/yyyy
             const [y, m, d] = closedRaw.split('-');
             const closed = `${d}/${m}/${y}`;
 
@@ -337,7 +336,6 @@
                 dailyMap[cleanDate].count += 1;
             });
 
-            // Render Rekap Harian
             Object.keys(dailyMap).forEach(date => {
                 const sum = dailyMap[date];
                 const isProf = sum.total >= 0;
@@ -361,7 +359,6 @@
                 document.getElementById('resetFilterBtn').classList.add('hidden');
             }
 
-            // Render Riwayat Trade: Data baru/nomor paling besar dipastikan di paling atas
             for (let i = 0; i < filtered.length; i++) {
                 const item = filtered[i];
                 const p = parseFloat(item.pnl) || 0;
