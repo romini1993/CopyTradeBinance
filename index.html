@@ -200,17 +200,15 @@
             else input.value = val;
         }
 
-        // Anti-geser timezone: Parsing string tanggal ISO mentah ke tanggal lokal dengan akurat
         function cleanDateStr(dateInput) {
             if (!dateInput) return '';
             let str = String(dateInput).trim();
             if (str.includes('T')) {
-                // Ambil bagian tanggalnya saja tanpa konversi UTC otomatis yang bikin mundur
                 str = str.split('T')[0];
             }
             if (str.includes('-') && str.split('-')[0].length === 4) {
-                const parts = str.split('-'); // YYYY-MM-DD
-                return `${parts[2]}/${parts[1]}/${parts[0]}`; // dd/mm/yyyy
+                const parts = str.split('-');
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
             }
             return str;
         }
@@ -219,7 +217,6 @@
             const cleaned = cleanDateStr(dateInput);
             if (!cleaned || !cleaned.includes('/')) return dateInput;
             const parts = cleaned.split('/');
-            // Pakai waktu lokal jam 12 siang biar aman dari selisih geser timezone
             const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]), 12, 0, 0);
             if (isNaN(d.getTime())) return cleaned;
             const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
@@ -237,8 +234,15 @@
         window.onload = function() {
             const cached = localStorage.getItem('tradingDataCache');
             if (cached) {
-                try { cachedGlobalResponse = JSON.parse(cached); renderDashboard(cachedGlobalResponse); } catch(e){}
+                try { 
+                    cachedGlobalResponse = JSON.parse(cached); 
+                    if(cachedGlobalResponse.history) {
+                        cachedGlobalResponse.history.forEach(item => { item.closed = cleanDateStr(item.closed); });
+                    }
+                    renderDashboard(cachedGlobalResponse); 
+                } catch(e){}
             }
+            
             fetch(API_URL).then(res => res.json()).then(data => {
                 if (data && data.history) {
                     data.history.forEach(item => { item.closed = cleanDateStr(item.closed); });
@@ -302,6 +306,34 @@
             fetch(`${API_URL}?action=delete&no=${no}`).catch(e=>{});
         };
 
+        // Fungsi Long-Press (Tahan sebentar baru muncul popup hapus)
+        function bindLongPress(element, no) {
+            let pressTimer = null;
+
+            const startPress = (e) => {
+                if (e.type === 'click') return;
+                pressTimer = setTimeout(() => {
+                    if (navigator.vibrate) navigator.vibrate(50); // Getar dikit kalau support
+                    handleHapus(no);
+                }, 500); // Tahan 0.5 detik
+            };
+
+            const cancelPress = () => {
+                if (pressTimer) {
+                    clearTimeout(pressTimer);
+                    pressTimer = null;
+                }
+            };
+
+            element.addEventListener('mousedown', startPress);
+            element.addEventListener('touchstart', startPress, { passive: true });
+            element.addEventListener('mouseup', cancelPress);
+            element.addEventListener('mouseleave', cancelPress);
+            element.addEventListener('touchend', cancelPress);
+            element.addEventListener('touchmove', cancelPress);
+            element.addEventListener('contextmenu', (e) => e.preventDefault());
+        }
+
         function recalculateStats() {
             let sum = 0, wins = 0;
             cachedGlobalResponse.history.forEach(item => {
@@ -364,9 +396,11 @@
                 const p = parseFloat(item.pnl) || 0;
                 const isProf = p >= 0;
                 const div = document.createElement('div');
-                div.className = `p-3 rounded-xl border ${isProf?'border-emerald-500/20 bg-emerald-500/5':'border-rose-500/20 bg-rose-500/5'} flex justify-between items-center cursor-pointer select-none`;
+                div.className = `p-3 rounded-xl border ${isProf?'border-emerald-500/20 bg-emerald-500/5':'border-rose-500/20 bg-rose-500/5'} flex justify-between items-center select-none cursor-pointer`;
                 div.innerHTML = `<div class="text-left text-xs"><span class="text-indigo-400 font-bold">#${item.no}</span> • <span class="text-slate-300">${cleanDateStr(item.closed)}</span><div class="text-[9px] ${isProf?'text-emerald-500':'text-rose-500'} font-bold">${isProf?'PROFIT':'LOSS'}</div></div><div class="font-bold text-xs text-white">${item.pair}</div><div class="text-right text-xs"><div class="num font-bold ${isProf?'text-emerald-400':'text-rose-400'}">${isProf?'+':''}${p.toFixed(2)} USDT</div><div class="num text-[10px] text-slate-400">${formatRupiah(p*currentKursIdr)}</div></div>`;
-                div.onclick = () => handleHapus(item.no);
+                
+                // Terapkan fungsi tahan (long-press) untuk hapus
+                bindLongPress(div, item.no);
                 tradeC.appendChild(div);
             }
         }
