@@ -180,7 +180,6 @@
     </div>
 
     <script>
-        // MASUKKAN LINK URL DEPLOYMENT APPS SCRIPT BARU DI SINI:
         const API_URL = "https://script.google.com/macros/s/AKfycbz40OxyG_66G1zwBw9HwQ28GQOXvAA_Yi1LMRp8ekHPxn5UvAtzaUFoCLU8N_6Bm0cq/exec";
         
         let currentKursIdr = 17550;
@@ -237,6 +236,7 @@
             const maxNo = cachedGlobalResponse.history.length > 0 ? Math.max(...cachedGlobalResponse.history.map(x => parseInt(x.no) || 0)) : 0;
             const newItem = { no: maxNo + 1, pair, opened, closed, pnl };
 
+            // Taruh data baru langsung di paling atas history
             cachedGlobalResponse.history.unshift(newItem);
             recalculateStats();
 
@@ -325,6 +325,7 @@
                 document.getElementById('resetFilterBtn').classList.add('hidden');
             }
 
+            // Render langsung tanpa reverse ulang agar urutan nomor paling besar (terbaru) tetap di paling atas
             filtered.forEach(item => {
                 const p = parseFloat(item.pnl) || 0;
                 const isProf = p >= 0;
