@@ -236,7 +236,6 @@
             const maxNo = cachedGlobalResponse.history.length > 0 ? Math.max(...cachedGlobalResponse.history.map(x => parseInt(x.no) || 0)) : 0;
             const newItem = { no: maxNo + 1, pair, opened, closed, pnl };
 
-            // Taruh data baru langsung di paling atas history
             cachedGlobalResponse.history.unshift(newItem);
             recalculateStats();
 
@@ -325,8 +324,9 @@
                 document.getElementById('resetFilterBtn').classList.add('hidden');
             }
 
-            // Render langsung tanpa reverse ulang agar urutan nomor paling besar (terbaru) tetap di paling atas
-            filtered.forEach(item => {
+            // Loop dari bawah ke atas agar data terbaru dipastikan posisinya paling atas
+            for (let i = filtered.length - 1; i >= 0; i--) {
+                const item = filtered[i];
                 const p = parseFloat(item.pnl) || 0;
                 const isProf = p >= 0;
                 const div = document.createElement('div');
@@ -334,7 +334,7 @@
                 div.innerHTML = `<div class="text-left text-xs"><span class="text-indigo-400 font-bold">#${item.no}</span> • <span class="text-slate-300">${item.closed}</span><div class="text-[9px] ${isProf?'text-emerald-500':'text-rose-500'} font-bold">${isProf?'PROFIT':'LOSS'}</div></div><div class="font-bold text-xs text-white">${item.pair}</div><div class="text-right text-xs"><div class="num font-bold ${isProf?'text-emerald-400':'text-rose-400'}">${isProf?'+':''}${p.toFixed(2)} USDT</div><div class="num text-[10px] text-slate-400">${formatRupiah(p*currentKursIdr)}</div></div>`;
                 div.onclick = () => handleHapus(item.no);
                 tradeC.appendChild(div);
-            });
+            }
         }
 
         function renderStats(res) {
