@@ -200,6 +200,32 @@
             else input.value = val;
         }
 
+        // Fungsi pembersih format tanggal ISO dari Google Sheet jadi dd/mm/yyyy bersih
+        function cleanDateStr(dateInput) {
+            if (!dateInput) return '';
+            let str = String(dateInput).trim();
+            if (str.includes('T')) {
+                str = str.split('T')[0]; // Ambil YYYY-MM-DD-nya saja
+            }
+            if (str.includes('-') && str.split('-')[0].length === 4) {
+                const parts = str.split('-');
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return str;
+        }
+
+        // Fungsi pembuat format Hari, dd-mm-yyyy untuk Rekap Harian
+        function formatDayAndDate(dateInput) {
+            const cleaned = cleanDateStr(dateInput);
+            if (!cleaned || !cleaned.includes('/')) return dateInput;
+            const parts = cleaned.split('/');
+            const d = new Date(parts[2], parts[1] - 1, parts[0]);
+            if (isNaN(d.getTime())) return cleaned;
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const dayName = days[d.getDay()];
+            return `${dayName}, ${parts[0]}-${parts[1]}-${parts[2]}`;
+        }
+
         function showToast(msg, type='success') {
             const t = document.getElementById('toast'), i = document.getElementById('toastIcon'), txt = document.getElementById('toastText');
             txt.innerText = msg; i.innerText = type === 'success' ? '✓' : '✕';
@@ -214,6 +240,8 @@
             }
             fetch(API_URL).then(res => res.json()).then(data => {
                 if (data && data.history) {
+                    // Normalisasi tanggal history agar bersih dari format ISO
+                    data.history.forEach(item => { item.closed = cleanDateStr(item.closed); });
                     cachedGlobalResponse = data;
                     localStorage.setItem('tradingDataCache', JSON.stringify(data));
                     renderDashboard(data);
@@ -230,7 +258,12 @@
             formatPairInput(pairField);
             const pair = pairField.value;
             const opened = document.getElementById('opened').value;
-            const closed = document.getElementById('closed').value;
+            const closedRaw = document.getElementById('closed').value;
+            
+            // Format tanggal closed ke dd/mm/yyyy
+            const [y, m, d] = closedRaw.split('-');
+            const closed = `${d}/${m}/${y}`;
+
             const pnl = parseFloat(document.getElementById('pnl').value) || 0;
 
             const maxNo = cachedGlobalResponse.history.length > 0 ? Math.max(...cachedGlobalResponse.history.map(x => parseInt(x.no) || 0)) : 0;
@@ -297,41 +330,45 @@
 
             const dailyMap = {};
             data.forEach(item => {
-                if (!item.closed) return;
-                if (!dailyMap[item.closed]) dailyMap[item.closed] = { total: 0, count: 0 };
-                dailyMap[item.closed].total += parseFloat(item.pnl) || 0;
-                dailyMap[item.closed].count += 1;
+                const cleanDate = cleanDateStr(item.closed);
+                if (!cleanDate) return;
+                if (!dailyMap[cleanDate]) dailyMap[cleanDate] = { total: 0, count: 0 };
+                dailyMap[cleanDate].total += parseFloat(item.pnl) || 0;
+                dailyMap[cleanDate].count += 1;
             });
 
+            // Render Rekap Harian
             Object.keys(dailyMap).forEach(date => {
                 const sum = dailyMap[date];
                 const isProf = sum.total >= 0;
                 const isSel = selectedFilterDate === date;
+                const formattedDateLabel = formatDayAndDate(date);
+
                 const div = document.createElement('div');
                 div.className = `p-3 rounded-xl border cursor-pointer flex justify-between items-center ${isSel ? 'bg-indigo-500/10 border-indigo-500 text-white font-bold' : 'bg-[#090a10] border-[#23273c] text-slate-200'}`;
                 div.onclick = () => filterByDate(isSel ? null : date);
-                div.innerHTML = `<div><div class="font-bold text-xs">${date}</div><div class="text-[10px] text-slate-400">${sum.count} trade</div></div><div class="text-right"><div class="num font-bold text-xs ${isProf?'text-emerald-400':'text-rose-400'}">${isProf?'+':''}${sum.total.toFixed(2)} USDT</div><div class="num text-[10px] text-slate-400">${formatRupiah(sum.total*currentKursIdr)}</div></div>`;
+                div.innerHTML = `<div><div class="font-bold text-xs">${formattedDateLabel}</div><div class="text-[10px] text-slate-400">${sum.count} trade</div></div><div class="text-right"><div class="num font-bold text-xs ${isProf?'text-emerald-400':'text-rose-400'}">${isProf?'+':''}${sum.total.toFixed(2)} USDT</div><div class="num text-[10px] text-slate-400">${formatRupiah(sum.total*currentKursIdr)}</div></div>`;
                 dailyC.appendChild(div);
             });
 
             let filtered = data;
             if (selectedFilterDate) {
-                filtered = data.filter(i => i.closed === selectedFilterDate);
-                document.getElementById('listHeaderTitle').innerText = `Trade: ${selectedFilterDate}`;
+                filtered = data.filter(i => cleanDateStr(i.closed) === selectedFilterDate);
+                document.getElementById('listHeaderTitle').innerText = `Trade: ${formatDayAndDate(selectedFilterDate)}`;
                 document.getElementById('resetFilterBtn').classList.remove('hidden');
             } else {
                 document.getElementById('listHeaderTitle').innerText = "Riwayat Trade";
                 document.getElementById('resetFilterBtn').classList.add('hidden');
             }
 
-            // Loop dari bawah ke atas agar data terbaru dipastikan posisinya paling atas
-            for (let i = filtered.length - 1; i >= 0; i--) {
+            // Render Riwayat Trade: Data baru/nomor paling besar dipastikan di paling atas
+            for (let i = 0; i < filtered.length; i++) {
                 const item = filtered[i];
                 const p = parseFloat(item.pnl) || 0;
                 const isProf = p >= 0;
                 const div = document.createElement('div');
                 div.className = `p-3 rounded-xl border ${isProf?'border-emerald-500/20 bg-emerald-500/5':'border-rose-500/20 bg-rose-500/5'} flex justify-between items-center cursor-pointer select-none`;
-                div.innerHTML = `<div class="text-left text-xs"><span class="text-indigo-400 font-bold">#${item.no}</span> • <span class="text-slate-300">${item.closed}</span><div class="text-[9px] ${isProf?'text-emerald-500':'text-rose-500'} font-bold">${isProf?'PROFIT':'LOSS'}</div></div><div class="font-bold text-xs text-white">${item.pair}</div><div class="text-right text-xs"><div class="num font-bold ${isProf?'text-emerald-400':'text-rose-400'}">${isProf?'+':''}${p.toFixed(2)} USDT</div><div class="num text-[10px] text-slate-400">${formatRupiah(p*currentKursIdr)}</div></div>`;
+                div.innerHTML = `<div class="text-left text-xs"><span class="text-indigo-400 font-bold">#${item.no}</span> • <span class="text-slate-300">${cleanDateStr(item.closed)}</span><div class="text-[9px] ${isProf?'text-emerald-500':'text-rose-500'} font-bold">${isProf?'PROFIT':'LOSS'}</div></div><div class="font-bold text-xs text-white">${item.pair}</div><div class="text-right text-xs"><div class="num font-bold ${isProf?'text-emerald-400':'text-rose-400'}">${isProf?'+':''}${p.toFixed(2)} USDT</div><div class="num text-[10px] text-slate-400">${formatRupiah(p*currentKursIdr)}</div></div>`;
                 div.onclick = () => handleHapus(item.no);
                 tradeC.appendChild(div);
             }
