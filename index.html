@@ -3,60 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fast Trading Log - Porto Style</title>
+    <meta name="theme-color" content="#06070b">
+    <title>Trading Log</title>
     <link rel="manifest" href="./manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <style>
+        :root {
+            --bg: #06070b;
+            --surface: #0f121a;
+            --surface-2: #161a24;
+            --border: #212635;
+            --border-soft: rgba(255,255,255,0.07);
+            --text: #eef1f7;
+            --text-dim: #8891a4;
+            --text-faint: #565e70;
+            --accent: #d9a441;
+            --accent-bright: #f0bd63;
+            --accent-dim: rgba(217,164,65,0.12);
+            --profit: #34d399;
+            --loss: #fb7185;
+        }
+
         html, body {
             width: 100%;
             min-height: 100vh;
             margin: 0;
             padding: 0;
-            background: #090a10;
-            color: #e2e8f0;
-            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Plus Jakarta Sans', sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
         * { box-sizing: border-box; }
-        input, select, textarea, button { font-size: 15px !important; font-family: 'Inter', sans-serif; }
+        input, select, textarea, button { font-size: 15px !important; font-family: 'Plus Jakarta Sans', sans-serif; }
         .font-display { font-family: 'Space Grotesk', sans-serif; }
         .num { font-family: 'Space Grotesk', sans-serif; font-variant-numeric: tabular-nums; }
 
+        .bg-glow {
+            position: fixed;
+            top: -220px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 900px;
+            height: 420px;
+            background: radial-gradient(ellipse at center, rgba(217,164,65,0.10) 0%, rgba(217,164,65,0) 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Custom Scrollbar */
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 8px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #23273c; border-radius: 8px; }
-        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #6366f1; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
         @media (max-width: 1023px) {
-            #dailySummaryList {
-                max-height: 380px;
-                overflow-y: auto;
-            }
+            #dailySummaryList { max-height: 380px; overflow-y: auto; }
         }
 
         .porto-card {
-            background: #10121d;
-            border: 1px solid #1e2235;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.03);
         }
         .porto-input {
-            background: #090a10;
-            border: 1px solid #23273c;
-            color: #f1f5f9;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            transition: border-color .15s ease, box-shadow .15s ease;
         }
         .porto-input:focus {
-            border-color: #6366f1;
+            border-color: var(--accent);
             outline: none;
+            box-shadow: 0 0 0 3px var(--accent-dim);
         }
 
-        .flatpickr-calendar { background: #10121d !important; box-shadow: 0 10px 30px rgba(0,0,0,.6) !important; border: 1px solid #23273c !important; }
-        .flatpickr-day.selected { background: #6366f1 !important; border-color: #6366f1 !important; color: #ffffff !important; }
-        .flatpickr-day.today { border-color: #6366f1 !important; }
-        
+        .section-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #e7eaf1;
+            letter-spacing: 0.01em;
+        }
+        .section-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .flatpickr-calendar { background: var(--surface) !important; box-shadow: 0 10px 30px rgba(0,0,0,.6) !important; border: 1px solid var(--border) !important; }
+        .flatpickr-day.selected { background: var(--accent) !important; border-color: var(--accent) !important; color: #06070b !important; }
+        .flatpickr-day.today { border-color: var(--accent) !important; }
+
         @keyframes riseIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         .rise-in { animation: riseIn .3s ease-out both; }
 
@@ -74,215 +117,415 @@
             opacity: 1;
             transform: translate(-50%, -50%) scale(1);
         }
+
+        .topbar {
+            background: rgba(15,18,26,0.85);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-soft);
+        }
+        .logo-mark {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--accent-dim);
+            border: 1px solid rgba(217,164,65,0.35);
+            color: var(--accent-bright);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .kurs-pill {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+        }
+        .stat-card {
+            border-left: 2px solid var(--border);
+            transition: border-color .2s ease;
+        }
     </style>
 </head>
-<body class="p-3 md:p-6 flex justify-center">
+<body class="relative">
+    <div class="bg-glow"></div>
 
-    <div class="w-full max-w-[1600px] grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        <div class="lg:col-span-4 xl:col-span-4 space-y-5 lg:sticky lg:top-6">
-            <div class="porto-card px-4 py-3 rounded-xl flex items-center justify-between border-l-4 border-l-indigo-500">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-display text-base font-bold">
-                        ⚡
-                    </div>
-                    <div>
-                        <h1 class="font-display text-base font-bold tracking-tight text-white leading-none">TRADING LOG</h1>
-                        <p class="text-[10px] text-slate-400 mt-0.5">Jurnal Presisi & Rekap Otomatis</p>
-                    </div>
+    <!-- TOP BAR -->
+    <header class="topbar sticky top-0 z-40">
+        <div class="max-w-[1600px] mx-auto px-4 md:px-6 py-3 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="logo-mark">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 17 L4 11" />
+                        <rect x="2.3" y="11" width="3.4" height="4" rx="0.6" />
+                        <path d="M12 19 L12 9" />
+                        <rect x="10.3" y="9" width="3.4" height="6" rx="0.6" />
+                        <path d="M20 15 L20 5" />
+                        <rect x="18.3" y="5" width="3.4" height="6" rx="0.6" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-display text-[15px] font-bold tracking-tight text-white leading-none">Trading Log</h1>
+                    <p class="text-[11px] text-[var(--text-dim)] mt-1">Jurnal presisi & rekap otomatis</p>
                 </div>
             </div>
+            <div id="headerKurs" class="kurs-pill num text-[11px] px-3 py-1.5 rounded-full whitespace-nowrap">
+                Memuat kurs…
+            </div>
+        </div>
+    </header>
 
+    <main class="relative z-10 p-3 md:p-6 flex justify-center">
+    <div class="w-full max-w-[1600px] grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+        <!-- KOLOM 1 (KIRI): Stats, Form Input -->
+        <div class="lg:col-span-4 xl:col-span-4 space-y-5 lg:sticky lg:top-20">
+
+            <!-- Stats Bar -->
             <div id="statsBar" class="grid grid-cols-3 gap-2.5">
-                <div class="porto-card p-3 rounded-xl text-center flex flex-col justify-center">
-                    <div class="text-[10px] uppercase font-semibold tracking-wider text-slate-400 mb-0.5">Total PNL</div>
+                <div id="statTotalCard" class="porto-card stat-card p-3 rounded-xl text-center flex flex-col justify-center">
+                    <div class="text-[10px] font-semibold tracking-wide text-[var(--text-faint)] mb-0.5">Total PNL</div>
                     <div id="statTotal" class="num text-sm font-bold text-slate-200">–</div>
-                    <div id="statTotalIdr" class="text-[10px] text-slate-400 font-medium num mt-0.5">–</div>
+                    <div id="statTotalIdr" class="text-[10px] text-[var(--text-dim)] font-medium num mt-0.5">–</div>
                 </div>
-                <div class="porto-card p-3 rounded-xl text-center flex flex-col justify-center">
-                    <div class="text-[10px] uppercase font-semibold tracking-wider text-slate-400 mb-0.5">Trades</div>
+                <div class="porto-card stat-card p-3 rounded-xl text-center flex flex-col justify-center">
+                    <div class="text-[10px] font-semibold tracking-wide text-[var(--text-faint)] mb-0.5">Trades</div>
                     <div id="statCount" class="num text-sm font-bold text-slate-200">–</div>
                 </div>
-                <div class="porto-card p-3 rounded-xl text-center flex flex-col justify-center">
-                    <div class="text-[10px] uppercase font-semibold tracking-wider text-slate-400 mb-0.5">Win Rate</div>
+                <div class="porto-card stat-card p-3 rounded-xl text-center flex flex-col justify-center">
+                    <div class="text-[10px] font-semibold tracking-wide text-[var(--text-faint)] mb-0.5">Win Rate</div>
                     <div id="statWinRate" class="num text-sm font-bold text-slate-200">–</div>
                 </div>
             </div>
 
+            <!-- Form Input Trade -->
             <form id="tradeForm" onsubmit="handleSubmit(event)" class="porto-card p-5 rounded-2xl space-y-4">
-                <h2 class="text-xs font-bold uppercase tracking-wider text-indigo-400">Input Position</h2>
+                <div class="flex items-center gap-2">
+                    <span class="section-dot"></span>
+                    <h2 class="section-label">Input position</h2>
+                </div>
+
                 <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Pair / Koin</label>
+                    <label class="block text-xs font-medium text-[var(--text-dim)] mb-1.5">Pair / Koin</label>
                     <input type="text" id="pair" list="pairList" required placeholder="Contoh: BTCUSDT" onblur="formatPairInput(this)" class="w-full porto-input rounded-xl px-3.5 py-2.5 uppercase font-medium">
                     <datalist id="pairList">
-                        <option value="BTCUSDT"><option value="ETHUSDT"><option value="SOLUSDT"><option value="XRPUSDT">
+                        <option value="ADAUSDT">
+                        <option value="ALGOUSDT">
+                        <option value="APTUSDT">
+                        <option value="ARBUSDT">
+                        <option value="ATOMUSDT">
+                        <option value="AVAXUSDT">
+                        <option value="BCHUSDT">
+                        <option value="BNBUSDT">
+                        <option value="BTCUSDT">
+                        <option value="CLUSDT">
+                        <option value="DOGEUSDT">
+                        <option value="DOTUSDT">
+                        <option value="ETHUSDT">
+                        <option value="FTMUSDT">
+                        <option value="INJUSDT">
+                        <option value="KORUUSDT">
+                        <option value="LINKUSDT">
+                        <option value="TCUSDT">
+                        <option value="LSKUSDT">
+                        <option value="LTCUSDT">
+                        <option value="NEARUSDT">
+                        <option value="OPUSDT">
+                        <option value="PEPEUSDT">
+                        <option value="SEIUSDT">
+                        <option value="SHIBUSDT">
+                        <option value="SKHYNIXUSDT">
+                        <option value="SKHYUSDT">
+                        <option value="SNDKUSDT">
+                        <option value="SOLUSDT">
+                        <option value="SOPHUSDT">
+                        <option value="SUIUSDT">
+                        <option value="TIAUSDT">
+                        <option value="TONUSDT">
+                        <option value="TRXUSDT">
+                        <option value="WIFUSDT">
+                        <option value="XRPUSDT">
+                        <option value="ZECUSDT">
                     </datalist>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Opened Date</label>
+                        <label class="block text-xs font-medium text-[var(--text-dim)] mb-1.5">Opened date</label>
                         <input type="text" id="opened" required placeholder="dd/mm/yyyy" class="w-full porto-input rounded-xl px-3.5 py-2.5">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Closed Date</label>
+                        <label class="block text-xs font-medium text-[var(--text-dim)] mb-1.5">Closed date</label>
                         <input type="text" id="closed" required placeholder="dd/mm/yyyy" class="w-full porto-input rounded-xl px-3.5 py-2.5">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Closing PNL (USDT)</label>
-                    <input type="number" step="any" id="pnl" required placeholder="0.00" class="w-full porto-input rounded-xl px-3.5 py-2.5 num font-medium">
+                    <label class="block text-xs font-medium text-[var(--text-dim)] mb-1.5">Closing PNL (USDT)</label>
+                    <input type="number" step="any" id="pnl" required placeholder="0.00 (minus pakai -)" class="w-full porto-input rounded-xl px-3.5 py-2.5 num font-medium">
                 </div>
 
-                <button type="submit" id="submitBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-indigo-600/20">
-                    Simpan Position
+                <button type="submit" id="submitBtn" class="w-full bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-[#1a1305] font-semibold py-3 rounded-xl transition shadow-lg shadow-amber-500/20">
+                    Simpan position
                 </button>
             </form>
         </div>
 
-        <div class="lg:col-span-4 xl:col-span-4 space-y-4 lg:sticky lg:top-6">
+        <!-- KOLOM 2 (TENGAH): Rekap Harian -->
+        <div class="lg:col-span-4 xl:col-span-4 space-y-4 lg:sticky lg:top-20">
             <div class="porto-card p-4 sm:p-5 rounded-2xl space-y-3">
                 <div class="flex justify-between items-center mb-1">
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-indigo-400">Rekap Harian</h2>
-                    <span class="text-[10px] text-slate-400">Klik tanggal untuk filter</span>
+                    <div class="flex items-center gap-2">
+                        <span class="section-dot"></span>
+                        <h2 class="section-label">Rekap harian</h2>
+                    </div>
+                    <span class="text-[10px] text-[var(--text-faint)]">Klik tanggal untuk filter</span>
                 </div>
-                <div id="dailySummaryList" class="space-y-2 lg:max-h-[calc(100vh-140px)] overflow-y-auto pr-1 custom-scroll"></div>
+                <div id="dailySummaryList" class="space-y-2 lg:max-h-[calc(100vh-160px)] overflow-y-auto pr-1 custom-scroll"></div>
             </div>
         </div>
 
-        <div class="lg:col-span-4 xl:col-span-4 space-y-4 lg:sticky lg:top-6">
+        <!-- KOLOM 3 (KANAN): Riwayat Trade -->
+        <div class="lg:col-span-4 xl:col-span-4 space-y-4 lg:sticky lg:top-20">
             <div class="porto-card p-4 sm:p-5 rounded-2xl space-y-3">
                 <div class="flex justify-between items-center mb-1">
-                    <h2 id="listHeaderTitle" class="text-xs font-bold uppercase tracking-wider text-indigo-400">Riwayat Trade</h2>
-                    <button id="resetFilterBtn" onclick="filterByDate(null)" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded hidden border border-slate-700">
-                        🔄 Semua Tanggal
+                    <div class="flex items-center gap-2">
+                        <span class="section-dot"></span>
+                        <h2 id="listHeaderTitle" class="section-label">Riwayat trade</h2>
+                    </div>
+                    <button id="resetFilterBtn" onclick="filterByDate(null)" class="text-[10px] bg-[var(--surface-2)] hover:bg-[#1d2230] text-slate-300 px-2 py-1 rounded hidden border border-[var(--border)]">
+                        ↺ Semua tanggal
                     </button>
                 </div>
-                <div id="tradeList" class="space-y-2 max-h-[calc(100vh-140px)] overflow-y-auto pr-1 custom-scroll"></div>
+                <div id="loading" class="text-center text-xs text-[var(--text-faint)] py-6" style="display:none;">Memuat data...</div>
+                <div id="tradeList" class="space-y-2 max-h-[calc(100vh-160px)] overflow-y-auto pr-1 custom-scroll"></div>
             </div>
         </div>
-    </div>
 
+    </div>
+    </main>
+
+    <!-- MODAL HAPUS -->
     <div id="deleteModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="porto-card w-full max-w-sm p-6 rounded-2xl border border-rose-500/30 text-center space-y-4">
-            <div class="w-12 h-12 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center text-xl font-bold mx-auto">⚠️</div>
-            <h3 class="font-bold text-white text-base">Hapus Trade</h3>
-            <p id="deleteModalText" class="text-xs text-slate-400">Yakin mau hapus?</p>
+        <div class="porto-card w-full max-w-sm p-6 rounded-2xl border border-rose-500/30 shadow-2xl space-y-4 rise-in text-center relative">
+            <div class="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center text-xl font-bold mx-auto">
+                ⚠️
+            </div>
+            <div>
+                <h3 class="font-display font-bold text-white text-base mb-1">Hapus trade</h3>
+                <p id="deleteModalText" class="text-xs text-[var(--text-dim)]">Yakin mau hapus trade ini?</p>
+            </div>
             <div class="flex gap-2 pt-2">
-                <button type="button" onclick="closeDeleteModal()" class="w-1/2 bg-[#1e2235] text-slate-300 py-2.5 rounded-xl text-xs">Batal</button>
-                <button type="button" id="confirmDeleteBtn" class="w-1/2 bg-rose-600 text-white py-2.5 rounded-xl text-xs">Hapus</button>
+                <button type="button" onclick="closeDeleteModal()" class="w-1/2 bg-[var(--surface-2)] hover:bg-[#1d2230] text-slate-300 font-semibold py-2.5 rounded-xl text-xs transition border border-[var(--border)]">
+                    Batal
+                </button>
+                <button type="button" id="confirmDeleteBtn" class="w-1/2 bg-rose-600 hover:bg-rose-500 text-white font-semibold py-2.5 rounded-xl text-xs transition shadow-lg shadow-rose-600/20">
+                    Hapus
+                </button>
             </div>
         </div>
     </div>
 
+    <!-- TOAST -->
     <div id="toast" class="px-5 py-3 rounded-2xl text-xs font-semibold shadow-2xl backdrop-blur-md border flex items-center gap-2">
-        <span id="toastIcon"></span><span id="toastText"></span>
+        <span id="toastIcon"></span>
+        <span id="toastText"></span>
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbz40OxyG_66G1zwBw9HwQ28GQOXvAA_Yi1LMRp8ekHPxn5UvAtzaUFoCLU8N_6Bm0cq/exec";
-        
+        const API_URL = "https://script.google.com/macros/s/AKfycbxXyZd1pekC0tZRdwuY-aQzJb7veINYpp_sheoxMemO9sSrduj26QRhR4kHokR5iqJq/exec"; 
         let currentKursIdr = 17550;
         let selectedNoToDelete = null;
         let selectedFilterDate = null;
         let cachedGlobalResponse = { history: [], totalPnl: 0, totalTrades: 0, winRate: 0 };
+        let toastTimeout = null;
 
-        fetch("https://api.binance.com/api/v3/ticker/price?symbol=USDTIDR")
-            .then(res => res.json())
-            .then(data => { if (data && data.price) currentKursIdr = parseFloat(data.price); }).catch(e=>{});
+        function fetchRealtimeKurs() {
+            fetch("https://api.binance.com/api/v3/ticker/price?symbol=USDTIDR")
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.price) {
+                        currentKursIdr = parseFloat(data.price);
+                        const kursEl = document.getElementById('headerKurs');
+                        if (kursEl) kursEl.textContent = `1 USDT ≈ ${formatRupiah(currentKursIdr)}`;
+                    }
+                })
+                .catch(err => console.log("Pakai kurs fallback:", currentKursIdr));
+        }
 
-        const closedPicker = flatpickr("#closed", { dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", defaultDate: "today", disableMobile: true });
-        const openedPicker = flatpickr("#opened", { dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", defaultDate: "today", disableMobile: true });
+        const getTodayStr = () => {
+            const d = new Date();
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+        const todayStr = getTodayStr();
+
+        const closedPicker = flatpickr("#closed", {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d/m/Y",
+            defaultDate: "today",
+            disableMobile: true
+        });
+
+        const openedPicker = flatpickr("#opened", {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d/m/Y",
+            defaultDate: "today",
+            disableMobile: true,
+            onChange: function(selectedDates, dateStr) {
+                if (!dateStr) return;
+                closedPicker.set("minDate", dateStr);
+                if (dateStr > todayStr) {
+                    closedPicker.setDate(dateStr, true);
+                } else {
+                    closedPicker.setDate(todayStr, true);
+                }
+            }
+        });
 
         function formatPairInput(input) {
             let val = input.value.trim().toUpperCase();
-            if (val && !val.includes("USDT")) input.value = val + "USDT";
-            else input.value = val;
-        }
-
-        function cleanDateStr(dateInput) {
-            if (!dateInput) return '';
-            let str = String(dateInput).trim();
-            if (str.includes('T')) {
-                str = str.split('T')[0];
+            if (val && !val.includes("USDT")) {
+                input.value = val + "USDT";
+            } else {
+                input.value = val;
             }
-            if (str.includes('-') && str.split('-')[0].length === 4) {
-                const parts = str.split('-');
-                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const text = document.getElementById('toastText');
+
+            if (toastTimeout) clearTimeout(toastTimeout);
+            text.innerText = message;
+
+            if (type === 'success') {
+                icon.innerText = '✓';
+                toast.className = "px-5 py-3 rounded-2xl text-xs font-semibold shadow-2xl backdrop-blur-md border flex items-center gap-2 bg-emerald-500/20 border-emerald-500/40 text-emerald-300 show";
+            } else {
+                icon.innerText = '✕';
+                toast.className = "px-5 py-3 rounded-2xl text-xs font-semibold shadow-2xl backdrop-blur-md border flex items-center gap-2 bg-rose-500/20 border-rose-500/40 text-rose-300 show";
             }
-            return str;
-        }
 
-        function formatDayAndDate(dateInput) {
-            const cleaned = cleanDateStr(dateInput);
-            if (!cleaned || !cleaned.includes('/')) return dateInput;
-            const parts = cleaned.split('/');
-            const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]), 12, 0, 0);
-            if (isNaN(d.getTime())) return cleaned;
-            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-            const dayName = days[d.getDay()];
-            return `${dayName}, ${parts[0]}-${parts[1]}-${parts[2]}`;
-        }
-
-        function showToast(msg, type='success') {
-            const t = document.getElementById('toast'), i = document.getElementById('toastIcon'), txt = document.getElementById('toastText');
-            txt.innerText = msg; i.innerText = type === 'success' ? '✓' : '✕';
-            t.className = `px-5 py-3 rounded-2xl text-xs font-semibold shadow-2xl backdrop-blur-md border flex items-center gap-2 ${type==='success'?'bg-emerald-500/20 border-emerald-500/40 text-emerald-300':'bg-rose-500/20 border-rose-500/40 text-rose-300'} show`;
-            setTimeout(() => t.classList.remove('show'), 1800);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 1800);
         }
 
         window.onload = function() {
-            const cached = localStorage.getItem('tradingDataCache');
-            if (cached) {
-                try { 
-                    cachedGlobalResponse = JSON.parse(cached); 
-                    if(cachedGlobalResponse.history) {
-                        cachedGlobalResponse.history.forEach(item => { item.closed = cleanDateStr(item.closed); });
-                    }
-                    renderDashboard(cachedGlobalResponse); 
-                } catch(e){}
+            fetchRealtimeKurs();
+            
+            const cachedData = localStorage.getItem('tradingDataCache');
+            if (cachedData) {
+                try {
+                    cachedGlobalResponse = JSON.parse(cachedData);
+                    renderDashboard(cachedGlobalResponse);
+                } catch(e) {}
             }
             
-            fetch(API_URL).then(res => res.json()).then(data => {
-                if (data && data.history) {
-                    data.history.forEach(item => { item.closed = cleanDateStr(item.closed); });
+            // Ambil data terbaru di background (no-store: jangan pernah kena cache)
+            fetch(`${API_URL}?_ts=${Date.now()}`, { cache: 'no-store' })
+                .then(res => res.json())
+                .then(data => {
                     cachedGlobalResponse = data;
                     localStorage.setItem('tradingDataCache', JSON.stringify(data));
                     renderDashboard(data);
-                }
-            }).catch(e=>{});
+                })
+                .catch(err => console.log(err));
         };
 
-        function filterByDate(d) { selectedFilterDate = d; renderDashboard(cachedGlobalResponse); }
-        function formatRupiah(val) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val); }
+        function filterByDate(dateStr) {
+            selectedFilterDate = dateStr;
+            renderDashboard(cachedGlobalResponse);
+        }
 
+        function getDayName(dateStr) {
+            if (!dateStr) return '';
+            var parts = dateStr.split('/');
+            if (parts.length === 3) {
+                var d = new Date(parts[2], parts[1] - 1, parts[0]);
+                var days = ['MINGGU', 'SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT', 'SABTU'];
+                return days[d.getDay()] || '';
+            }
+            return '';
+        }
+
+        function formatRupiah(amount) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        // LOGIKA INSTAN: render lokal duluan, sync ke Sheet di belakang layar.
+        // TIDAK ada refetch langsung setelah kirim -> itu penyebab data sempat
+        // "kedip" balik ke versi lama (race condition / cache jaringan).
         function handleSubmit(e) {
             e.preventDefault();
             const pairField = document.getElementById('pair');
             formatPairInput(pairField);
-            const pair = pairField.value;
-            const opened = document.getElementById('opened').value;
-            const closedRaw = document.getElementById('closed').value;
-            
-            const [y, m, d] = closedRaw.split('-');
-            const closed = `${d}/${m}/${y}`;
 
-            const pnl = parseFloat(document.getElementById('pnl').value) || 0;
+            const pairVal = pairField.value;
+            const openedVal = document.getElementById('opened').value;
+            const closedVal = document.getElementById('closed').value;
+            const pnlVal = parseFloat(document.getElementById('pnl').value) || 0;
 
-            const maxNo = cachedGlobalResponse.history.length > 0 ? Math.max(...cachedGlobalResponse.history.map(x => parseInt(x.no) || 0)) : 0;
-            const newItem = { no: maxNo + 1, pair, opened, closed, pnl };
+            const [y, m, d] = closedVal.split('-');
+            const formattedClosedDate = `${d}/${m}/${y}`;
 
+            const maxNo = (cachedGlobalResponse.history && cachedGlobalResponse.history.length > 0) 
+                ? Math.max(...cachedGlobalResponse.history.map(x => parseInt(x.no) || 0)) 
+                : 0;
+
+            const newItem = {
+                no: maxNo + 1,
+                pair: pairVal,
+                opened: openedVal,
+                closed: formattedClosedDate,
+                pnl: pnlVal
+            };
+
+            if (!cachedGlobalResponse.history) cachedGlobalResponse.history = [];
+            // unshift, BUKAN push -> history selalu "terbaru duluan" (lihat
+            // history.reverse() di Update.gs), jadi item baru wajib masuk ke
+            // index 0 (paling atas), bukan ke ujung array.
             cachedGlobalResponse.history.unshift(newItem);
-            recalculateStats();
 
+            let sumPnl = 0;
+            let wins = 0;
+            cachedGlobalResponse.history.forEach(item => {
+                sumPnl += parseFloat(item.pnl) || 0;
+                if ((parseFloat(item.pnl) || 0) > 0) wins++;
+            });
+            cachedGlobalResponse.totalPnl = sumPnl;
+            cachedGlobalResponse.totalTrades = cachedGlobalResponse.history.length;
+            cachedGlobalResponse.winRate = Math.round((wins / cachedGlobalResponse.totalTrades) * 100);
+
+            // Simpan lokal & langsung render instan detik itu juga
             localStorage.setItem('tradingDataCache', JSON.stringify(cachedGlobalResponse));
             renderDashboard(cachedGlobalResponse);
+
             showToast("Tersimpan", "success");
 
             document.getElementById('pair').value = '';
             document.getElementById('pnl').value = '';
 
-            fetch(`${API_URL}?action=add&pair=${encodeURIComponent(pair)}&opened=${encodeURIComponent(opened)}&closed=${encodeURIComponent(closed)}&pnl=${pnl}`).catch(e=>{});
+            const encPair = encodeURIComponent(pairVal);
+            const encOpened = encodeURIComponent(openedVal);
+            const encClosed = encodeURIComponent(closedVal);
+            const encPnl = encodeURIComponent(pnlVal);
+
+            // Kirim ke Google Sheet di background. Fire-and-forget: TIDAK ada
+            // refetch susulan yang menimpa state lokal yang sudah benar.
+            fetch(`${API_URL}?action=add&pair=${encPair}&opened=${encOpened}&closed=${encClosed}&pnl=${encPnl}`, { cache: 'no-store' })
+                .catch(err => {
+                    console.log(err);
+                    showToast("Gagal sync ke Sheet", "error");
+                });
         }
 
         function handleHapus(no) {
@@ -290,32 +533,54 @@
             document.getElementById('deleteModalText').innerText = "Yakin mau hapus trade No #" + no + "?";
             document.getElementById('deleteModal').classList.remove('hidden');
         }
-        function closeDeleteModal() { selectedNoToDelete = null; document.getElementById('deleteModal').classList.add('hidden'); }
 
+        function closeDeleteModal() {
+            selectedNoToDelete = null;
+            document.getElementById('deleteModal').classList.add('hidden');
+        }
+
+        // HAPUS INSTAN LOKAL, sync ke Sheet di background tanpa refetch susulan
         document.getElementById('confirmDeleteBtn').onclick = function() {
             if (selectedNoToDelete === null) return;
             const no = selectedNoToDelete;
             closeDeleteModal();
-            cachedGlobalResponse.history = cachedGlobalResponse.history.filter(item => parseInt(item.no) !== parseInt(no));
-            recalculateStats();
+
+            if (cachedGlobalResponse.history) {
+                cachedGlobalResponse.history = cachedGlobalResponse.history.filter(item => parseInt(item.no) !== parseInt(no));
+            }
+
+            let sumPnl = 0;
+            let wins = 0;
+            const totalCount = cachedGlobalResponse.history.length;
+            cachedGlobalResponse.history.forEach(item => {
+                sumPnl += parseFloat(item.pnl) || 0;
+                if ((parseFloat(item.pnl) || 0) > 0) wins++;
+            });
+            cachedGlobalResponse.totalPnl = sumPnl;
+            cachedGlobalResponse.totalTrades = totalCount;
+            cachedGlobalResponse.winRate = totalCount > 0 ? Math.round((wins / totalCount) * 100) : 0;
 
             localStorage.setItem('tradingDataCache', JSON.stringify(cachedGlobalResponse));
             renderDashboard(cachedGlobalResponse);
+
             showToast("Terhapus", "error");
 
-            fetch(`${API_URL}?action=delete&no=${no}`).catch(e=>{});
+            fetch(`${API_URL}?action=delete&no=${no}`, { cache: 'no-store' })
+                .catch(err => {
+                    console.log(err);
+                    showToast("Gagal hapus di Sheet", "error");
+                });
         };
 
-        // Fungsi Long-Press (Tahan sebentar baru muncul popup hapus)
         function bindLongPress(element, no) {
             let pressTimer = null;
 
             const startPress = (e) => {
                 if (e.type === 'click') return;
                 pressTimer = setTimeout(() => {
-                    if (navigator.vibrate) navigator.vibrate(50); // Getar dikit kalau support
+                    if (navigator.vibrate) navigator.vibrate(50);
                     handleHapus(no);
-                }, 500); // Tahan 0.5 detik
+                }, 500);
             };
 
             const cancelPress = () => {
@@ -327,92 +592,159 @@
 
             element.addEventListener('mousedown', startPress);
             element.addEventListener('touchstart', startPress, { passive: true });
+
             element.addEventListener('mouseup', cancelPress);
             element.addEventListener('mouseleave', cancelPress);
             element.addEventListener('touchend', cancelPress);
             element.addEventListener('touchmove', cancelPress);
-            element.addEventListener('contextmenu', (e) => e.preventDefault());
-        }
-
-        function recalculateStats() {
-            let sum = 0, wins = 0;
-            cachedGlobalResponse.history.forEach(item => {
-                const p = parseFloat(item.pnl) || 0;
-                sum += p;
-                if (p > 0) wins++;
+            element.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
             });
-            cachedGlobalResponse.totalPnl = sum;
-            cachedGlobalResponse.totalTrades = cachedGlobalResponse.history.length;
-            cachedGlobalResponse.winRate = cachedGlobalResponse.totalTrades > 0 ? Math.round((wins / cachedGlobalResponse.totalTrades) * 100) : 0;
         }
 
         function renderDashboard(res) {
-            const tradeC = document.getElementById('tradeList');
-            const dailyC = document.getElementById('dailySummaryList');
-            tradeC.innerHTML = ''; dailyC.innerHTML = '';
-            renderStats(res);
+            const tradeContainer = document.getElementById('tradeList');
+            const dailyContainer = document.getElementById('dailySummaryList');
+            const headerTitle = document.getElementById('listHeaderTitle');
+            const resetBtn = document.getElementById('resetFilterBtn');
+
+            tradeContainer.innerHTML = '';
+            dailyContainer.innerHTML = '';
 
             const data = res.history || [];
-            if (data.length === 0) {
-                tradeC.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">Belum ada data.</p>';
-                dailyC.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">Belum ada rekap.</p>';
+
+            renderStats(res);
+
+            if (!data || data.length === 0) {
+                tradeContainer.innerHTML = '<p class="text-xs text-[var(--text-faint)] text-center py-4">Belum ada data trading.</p>';
+                dailyContainer.innerHTML = '<p class="text-xs text-[var(--text-faint)] text-center py-4">Belum ada rekap.</p>';
                 return;
             }
 
+            // Render Rekap Harian
             const dailyMap = {};
             data.forEach(item => {
-                const cleanDate = cleanDateStr(item.closed);
-                if (!cleanDate) return;
-                if (!dailyMap[cleanDate]) dailyMap[cleanDate] = { total: 0, count: 0 };
-                dailyMap[cleanDate].total += parseFloat(item.pnl) || 0;
-                dailyMap[cleanDate].count += 1;
+                const closedDate = item.closed;
+                const pnlVal = parseFloat(item.pnl) || 0;
+                if (!closedDate) return;
+
+                if (!dailyMap[closedDate]) {
+                    dailyMap[closedDate] = { total: 0, count: 0 };
+                }
+                dailyMap[closedDate].total += pnlVal;
+                dailyMap[closedDate].count += 1;
             });
 
-            Object.keys(dailyMap).forEach(date => {
-                const sum = dailyMap[date];
-                const isProf = sum.total >= 0;
-                const isSel = selectedFilterDate === date;
-                const formattedDateLabel = formatDayAndDate(date);
-
-                const div = document.createElement('div');
-                div.className = `p-3 rounded-xl border cursor-pointer flex justify-between items-center ${isSel ? 'bg-indigo-500/10 border-indigo-500 text-white font-bold' : 'bg-[#090a10] border-[#23273c] text-slate-200'}`;
-                div.onclick = () => filterByDate(isSel ? null : date);
-                div.innerHTML = `<div><div class="font-bold text-xs">${formattedDateLabel}</div><div class="text-[10px] text-slate-400">${sum.count} trade</div></div><div class="text-right"><div class="num font-bold text-xs ${isProf?'text-emerald-400':'text-rose-400'}">${isProf?'+':''}${sum.total.toFixed(2)} USDT</div><div class="num text-[10px] text-slate-400">${formatRupiah(sum.total*currentKursIdr)}</div></div>`;
-                dailyC.appendChild(div);
-            });
-
-            let filtered = data;
-            if (selectedFilterDate) {
-                filtered = data.filter(i => cleanDateStr(i.closed) === selectedFilterDate);
-                document.getElementById('listHeaderTitle').innerText = `Trade: ${formatDayAndDate(selectedFilterDate)}`;
-                document.getElementById('resetFilterBtn').classList.remove('hidden');
-            } else {
-                document.getElementById('listHeaderTitle').innerText = "Riwayat Trade";
-                document.getElementById('resetFilterBtn').classList.add('hidden');
-            }
-
-            for (let i = 0; i < filtered.length; i++) {
-                const item = filtered[i];
-                const p = parseFloat(item.pnl) || 0;
-                const isProf = p >= 0;
-                const div = document.createElement('div');
-                div.className = `p-3 rounded-xl border ${isProf?'border-emerald-500/20 bg-emerald-500/5':'border-rose-500/20 bg-rose-500/5'} flex justify-between items-center select-none cursor-pointer`;
-                div.innerHTML = `<div class="text-left text-xs"><span class="text-indigo-400 font-bold">#${item.no}</span> • <span class="text-slate-300">${cleanDateStr(item.closed)}</span><div class="text-[9px] ${isProf?'text-emerald-500':'text-rose-500'} font-bold">${isProf?'PROFIT':'LOSS'}</div></div><div class="font-bold text-xs text-white">${item.pair}</div><div class="text-right text-xs"><div class="num font-bold ${isProf?'text-emerald-400':'text-rose-400'}">${isProf?'+':''}${p.toFixed(2)} USDT</div><div class="num text-[10px] text-slate-400">${formatRupiah(p*currentKursIdr)}</div></div>`;
+            Object.keys(dailyMap).forEach((date, i) => {
+                const summary = dailyMap[date];
+                const isProf = summary.total >= 0;
+                const color = isProf ? 'text-emerald-400' : 'text-rose-400';
+                const isSelected = selectedFilterDate === date;
                 
-                // Terapkan fungsi tahan (long-press) untuk hapus
-                bindLongPress(div, item.no);
-                tradeC.appendChild(div);
+                var dayName = getDayName(date);
+                var fullDateLabel = dayName ? `${dayName}, ${date}` : date;
+                var totalIdr = formatRupiah(summary.total * currentKursIdr);
+
+                const div = document.createElement('div');
+                div.className = `p-3 rounded-xl border cursor-pointer transition flex justify-between items-center ${
+                    isSelected 
+                    ? 'bg-amber-500/10 border-amber-500 text-white font-bold ring-1 ring-amber-500' 
+                    : 'bg-[var(--bg)] border-[var(--border)] hover:border-slate-600 text-slate-200'
+                }`;
+                div.style.animationDelay = `${i * 25}ms`;
+                div.onclick = () => filterByDate(isSelected ? null : date);
+                div.innerHTML = `
+                    <div>
+                        <div class="font-display font-bold text-xs sm:text-sm text-white">${fullDateLabel}</div>
+                        <div class="text-[10px] sm:text-[11px] text-[var(--text-dim)] mt-0.5">${summary.count} trade tertutup</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="num font-bold text-xs sm:text-sm ${color} whitespace-nowrap">
+                            ${isProf ? '+' : ''}${summary.total.toFixed(2)} USDT
+                        </div>
+                        <div class="num text-[9px] sm:text-[10px] text-[var(--text-dim)] font-medium num mt-0.5 whitespace-nowrap">
+                            ${totalIdr}
+                        </div>
+                    </div>
+                `;
+                dailyContainer.appendChild(div);
+            });
+
+            // Filter Data Riwayat Trade Berdasarkan Tanggal yang Diklik
+            let filteredData = data;
+            if (selectedFilterDate) {
+                filteredData = data.filter(item => item.closed === selectedFilterDate);
+                headerTitle.innerText = `Trade: ${selectedFilterDate}`;
+                resetBtn.classList.remove('hidden');
+            } else {
+                headerTitle.innerText = "Riwayat trade";
+                resetBtn.classList.add('hidden');
             }
+
+            if (filteredData.length === 0) {
+                tradeContainer.innerHTML = '<p class="text-xs text-[var(--text-faint)] text-center py-4">Tidak ada trade pada tanggal ini.</p>';
+                return;
+            }
+
+            // Render Riwayat Trade (Format #no • tanggal)
+            filteredData.forEach((item, i) => {
+                const pnlNum = parseFloat(item.pnl) || 0;
+                const isProfit = pnlNum >= 0;
+                const pnlColor = isProfit ? 'text-emerald-400' : 'text-rose-400';
+                const bgCard = isProfit ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-rose-500/20 bg-rose-500/5';
+                const totalIdr = formatRupiah(pnlNum * currentKursIdr);
+
+                const div = document.createElement('div');
+                div.className = `rise-in p-2.5 sm:p-3 rounded-xl border ${bgCard} flex items-center justify-between hover:border-slate-700 transition gap-1.5 cursor-pointer select-none`;
+                div.style.animationDelay = `${i * 15}ms`;
+                div.innerHTML = `
+                    <div class="w-[38%] min-w-0 text-left">
+                        <div class="text-[11px] sm:text-xs text-slate-300 font-medium truncate">
+                            <span class="text-amber-400 font-bold">#${item.no}</span> • <span class="text-slate-200">${item.closed}</span>
+                        </div>
+                        <div class="text-[9px] sm:text-[10px] font-semibold ${isProfit ? 'text-emerald-500' : 'text-rose-500'} uppercase mt-0.5">${isProfit ? 'PROFIT' : 'LOSS'}</div>
+                    </div>
+                    <div class="w-[28%] text-center px-1">
+                        <div class="font-display font-bold text-xs sm:text-sm text-white truncate">${item.pair}</div>
+                    </div>
+                    <div class="w-[34%] text-right min-w-0">
+                        <div class="num font-bold text-xs sm:text-sm ${pnlColor} whitespace-nowrap">${isProfit ? '+' : ''}${pnlNum.toFixed(2)} USDT</div>
+                        <div class="num text-[9px] sm:text-[10px] text-[var(--text-dim)] font-medium num mt-0.5 whitespace-nowrap">${totalIdr}</div>
+                    </div>
+                `;
+
+                bindLongPress(div, item.no);
+                tradeContainer.appendChild(div);
+            });
         }
 
         function renderStats(res) {
-            const tot = parseFloat(res.totalPnl) || 0;
-            const isProf = tot >= 0;
-            document.getElementById('statTotal').textContent = `${isProf?'+':''}${tot.toFixed(2)}`;
-            document.getElementById('statTotal').className = `num text-sm font-bold ${isProf?'text-emerald-400':'text-rose-400'}`;
-            document.getElementById('statTotalIdr').textContent = formatRupiah(tot * currentKursIdr);
-            document.getElementById('statCount').textContent = res.totalTrades || 0;
-            document.getElementById('statWinRate').textContent = `${res.winRate || 0}%`;
+            const totalEl = document.getElementById('statTotal');
+            const totalIdrEl = document.getElementById('statTotalIdr');
+            const totalCard = document.getElementById('statTotalCard');
+            const countEl = document.getElementById('statCount');
+            const winEl = document.getElementById('statWinRate');
+
+            const total = parseFloat(res.totalPnl) || 0;
+            const isProfit = total >= 0;
+
+            totalEl.textContent = `${isProfit ? '+' : ''}${total.toFixed(2)}`;
+            totalEl.className = `num text-sm font-bold ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`;
+
+            if (totalCard) {
+                totalCard.style.borderLeftColor = isProfit ? '#34d399' : '#fb7185';
+            }
+            
+            if (totalIdrEl) {
+                totalIdrEl.textContent = formatRupiah(total * currentKursIdr);
+            }
+
+            countEl.textContent = res.totalTrades || 0;
+            winEl.textContent = `${res.winRate || 0}%`;
+        }
+
+        function handleError(err) {
+            console.error(err);
         }
     </script>
 </body>
