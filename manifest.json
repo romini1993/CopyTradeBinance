@@ -1,6 +1,6 @@
 {
-  "name": "Fast Trading Log",
-  "short_name": "TradeApp",
+  "name": "Copy Trade Log",
+  "short_name": "CopyTrade",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#080b13",
